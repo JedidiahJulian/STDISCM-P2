@@ -19,7 +19,7 @@ if errorlevel 1 (
 
 echo.
 echo Building MMORPG LFG Dungeon Queue Simulator...
-cl /nologo /std:c++17 /EHsc /W4 /permissive- main.cpp /Fe:dungeon_lfg.exe
+cl /nologo /std:c++17 /EHsc /W4 /permissive- main.cpp config.cpp simulation.cpp /Fe:dungeon_lfg.exe
 if errorlevel 1 (
     echo.
     echo Build failed.

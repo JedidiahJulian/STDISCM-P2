@@ -2,6 +2,16 @@
 
 This C++17 console program demonstrates process synchronization through an MMORPG-style dungeon queue. It forms valid five-player parties, places them in a FIFO queue, and lets a fixed number of concurrent dungeon-instance threads serve them safely.
 
+## Project structure
+
+- `main.cpp` contains the small program entry point.
+- `config.h` declares the configuration structure and configuration functions.
+- `config.cpp` implements configuration parsing, validation, and initial output.
+- `simulation.h` declares the `Simulation` class and its public/private interface.
+- `simulation.cpp` implements the threaded dungeon simulation.
+- `config.txt` contains the simulation inputs.
+- `build.bat` and `run.bat` build and run the project on Windows.
+
 ## Assignment requirements
 
 The simulator allows at most `n` active dungeon parties. Every complete party contains exactly one tank, one healer, and three DPS players. Dungeon runs take a random integral number of seconds from `t1` through `t2`, inclusive. The program reports live instance states, waiting parties, unmatched players, and per-instance and aggregate statistics.
@@ -67,7 +77,7 @@ Run commands from the directory containing `main.cpp` and `config.txt`.
 Compile with g++:
 
 ```bash
-g++ -std=c++17 -pthread main.cpp -o dungeon_lfg
+g++ -std=c++17 -pthread main.cpp config.cpp simulation.cpp -o dungeon_lfg
 ```
 
 On Linux or macOS:
