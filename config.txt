@@ -4,17 +4,17 @@
 # Maximum number of dungeon instances that may run concurrently (must be > 0).
 n=2
 
-# Number of tank players waiting in the queue (must be >= 0).
+# Number of tank players waiting in the queue (must be > 0).
 t=5
 
-# Number of healer players waiting in the queue (must be >= 0).
+# Number of healer players waiting in the queue (must be > 0).
 h=5
 
-# Number of DPS players waiting in the queue (must be >= 0).
+# Number of DPS players waiting in the queue (must be > 0).
 d=15
 
-# Minimum dungeon completion time in seconds (must be >= 0).
+# Minimum dungeon completion time in seconds (must be > 0).
 t1=3
 
-# Maximum dungeon completion time in seconds (must satisfy t1 <= t2 <= 15).
+# Maximum dungeon completion time in seconds (must satisfy 1 <= t1 <= t2 <= 15).
 t2=8

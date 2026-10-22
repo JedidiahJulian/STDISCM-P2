@@ -25,11 +25,11 @@ The six required keys are:
 | Key | Meaning | Valid values |
 | --- | --- | --- |
 | `n` | Maximum concurrent dungeon instances | Greater than 0 |
-| `t` | Tank players | 0 or greater |
-| `h` | Healer players | 0 or greater |
-| `d` | DPS players | 0 or greater |
-| `t1` | Minimum dungeon duration in seconds | `0 <= t1` |
-| `t2` | Maximum dungeon duration in seconds | `t1 <= t2 <= 15` |
+| `t` | Tank players | Greater than 0 |
+| `h` | Healer players | Greater than 0 |
+| `d` | DPS players | Greater than 0 |
+| `t1` | Minimum dungeon duration in seconds | Greater than 0 |
+| `t2` | Maximum dungeon duration in seconds | `1 <= t1 <= t2 <= 15` |
 
 Edit `config.txt` before running the program. Entries may be in any order and may have whitespace around keys and values. Blank lines and lines whose first non-whitespace character is `#` are ignored.
 
@@ -43,6 +43,8 @@ t2=8
 ```
 
 Missing keys, duplicate or unknown keys, malformed integers, and out-of-range values produce a descriptive error and a nonzero exit code. No worker threads are started after a configuration error.
+
+Every value must be a positive whole number. Zero, negative numbers, text (`n=two`), decimals (`t1=2.5`), and mixed values (`d=15players`) are rejected.
 
 ## Party formation
 

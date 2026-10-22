@@ -30,19 +30,33 @@ static int parseInteger(const string& value, const string& key, int lineNumber) 
                             to_string(lineNumber) + ".");
     }
 
+    // Validate the complete value before converting it. This prevents inputs such
+    // as "five", "3.5", and "12players" from being partially interpreted as ints.
+    const size_t firstDigit = (value.front() == '+' || value.front() == '-') ? 1 : 0;
+    const bool hasDigits = firstDigit < value.size();
+    const bool containsOnlyDigits =
+        hasDigits && all_of(value.begin() + firstDigit, value.end(),
+                            [](unsigned char ch) { return isdigit(ch); });
+    if (!containsOnlyDigits) {
+        throw runtime_error("Expected a whole number for '" + key + "' on line " +
+                            to_string(lineNumber) + ", but received '" + value + "'.");
+    }
+
     size_t used = 0;
     long long parsed = 0;
     try {
         parsed = stoll(value, &used, 10);
     } catch (const exception&) {
-        throw runtime_error("Invalid integer for '" + key + "' on line " +
-                            to_string(lineNumber) + ": " + value);
+        throw runtime_error("Integer for '" + key + "' on line " +
+                            to_string(lineNumber) + " is outside the supported range: '" +
+                            value + "'.");
     }
 
     if (used != value.size() || parsed < numeric_limits<int>::min() ||
         parsed > numeric_limits<int>::max()) {
-        throw runtime_error("Invalid integer for '" + key + "' on line " +
-                            to_string(lineNumber) + ": " + value);
+        throw runtime_error("Integer for '" + key + "' on line " +
+                            to_string(lineNumber) + " is outside the supported range: '" +
+                            value + "'.");
     }
 
     return static_cast<int>(parsed);
@@ -103,14 +117,13 @@ Config loadConfig(const char* fileName) {
     Config config{values["n"], values["t"], values["h"],
                   values["d"], values["t1"], values["t2"]};
 
-    if (config.n <= 0) {
-        throw runtime_error("Invalid configuration: n must be greater than 0.");
+    if (config.n <= 0 || config.t <= 0 || config.h <= 0 || config.d <= 0 ||
+        config.t1 <= 0 || config.t2 <= 0) {
+        throw runtime_error(
+            "Invalid configuration: n, t, h, d, t1, and t2 must all be greater than 0.");
     }
-    if (config.t < 0 || config.h < 0 || config.d < 0) {
-        throw runtime_error("Invalid configuration: t, h, and d must be non-negative.");
-    }
-    if (config.t1 < 0 || config.t1 > config.t2 || config.t2 > 15) {
-        throw runtime_error("Invalid configuration: times must satisfy 0 <= t1 <= t2 <= 15.");
+    if (config.t1 > config.t2 || config.t2 > 15) {
+        throw runtime_error("Invalid configuration: times must satisfy 1 <= t1 <= t2 <= 15.");
     }
 
     return config;
