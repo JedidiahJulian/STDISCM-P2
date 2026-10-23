@@ -25,6 +25,7 @@ private:
         int currentPartyId{0};
         int partiesServed{0};
         int totalTimeServed{0};
+        vector<int> servedPartyIds;
     };
 
     Config config_;
@@ -33,7 +34,6 @@ private:
     mutable mutex mutex_;
     counting_semaphore<> availableInstances_;
     chrono::steady_clock::time_point startTime_;
-    chrono::steady_clock::time_point finishTime_;
 
     long long elapsedSeconds() const;
     void printStatusLocked() const;

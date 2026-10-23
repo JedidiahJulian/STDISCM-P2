@@ -2,16 +2,16 @@
 # Lines beginning with # are comments and are ignored by the program.
 
 # Maximum number of dungeon instances that may run concurrently (must be > 0).
-n=3
+n=10
 
 # Number of tank players waiting in the queue (must be >= 0).
-t=5
+t=25
 
 # Number of healer players waiting in the queue (must be >= 0).
-h=5
+h=25
 
 # Number of DPS players waiting in the queue (must be >= 0).
-d=15
+d=40
 
 # Minimum dungeon completion time in seconds (must be > 0).
 t1=1

@@ -24,8 +24,8 @@ int main() {
 
         Simulation simulation(config, totalParties);
         simulation.run();
+        waitForEnter("Press Enter to view the final summary...");
         simulation.printFinalSummary();
-        waitForEnter("Press Enter to exit...");
 
         return 0;
     } catch (const exception& error) {

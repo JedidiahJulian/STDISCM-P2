@@ -16,7 +16,7 @@ This C++20 console program demonstrates process synchronization through an MMORP
 
 The simulator allows at most `n` active dungeon parties. Every complete party contains exactly one tank, one healer, and three DPS players. Dungeon runs take a random integral number of seconds from `t1` through `t2`, inclusive. The program reports live instance states, waiting parties, unmatched players, and per-instance and aggregate statistics.
 
-All players are treated as arriving at the same time. Configuration values come only from `config.txt`. The program pauses for Enter after displaying the configuration and again after the final summary.
+All players are treated as arriving at the same time. Configuration values come only from `config.txt`. The program pauses for Enter after displaying the configuration and again after the simulation finishes, before showing the final summary.
 
 ## Configuration
 
@@ -111,4 +111,4 @@ Because the program looks for `config.txt` in its current working directory, sta
 
 At startup, the program displays the loaded values, complete parties, unmatched players by role, and initial waiting count. Whenever a party enters or finishes, it prints an elapsed timestamp and a synchronized snapshot of every instance. An occupied instance is `active (Party N)`; an unoccupied one is `empty`.
 
-The final summary reports every instance's final state, party count, and cumulative service time. **Total Instance Service Time** is the sum of all simulated dungeon durations. **Total Simulation Time** is elapsed wall-clock time. Because instances run concurrently, cumulative service time may be much larger than wall-clock time.
+The final summary reports every instance's final state, party count, IDs of the parties it served, and cumulative service time. **Total Instance Service Time** is the sum of all simulated dungeon durations.

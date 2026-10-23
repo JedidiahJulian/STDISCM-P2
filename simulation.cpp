@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
-#include <iomanip>
 #include <iostream>
 #include <thread>
 
@@ -71,8 +70,6 @@ void Simulation::run() {
     for (thread& worker : workers) {
         worker.join();
     }
-
-    finishTime_ = chrono::steady_clock::now();
 }
 
 void Simulation::printFinalSummary() const {
@@ -84,16 +81,26 @@ void Simulation::printFinalSummary() const {
         cout << "Instance " << instance.id << '\n'
              << "Status          : " << (instance.active ? "active" : "empty") << '\n'
              << "Parties Served  : " << instance.partiesServed << '\n'
+             << "Party IDs       : ";
+        if (instance.servedPartyIds.empty()) {
+            cout << "none";
+        } else {
+            for (size_t index = 0; index < instance.servedPartyIds.size(); ++index) {
+                if (index > 0) {
+                    cout << ", ";
+                }
+                cout << instance.servedPartyIds[index];
+            }
+        }
+        cout << '\n'
              << "Total Time      : " << instance.totalTimeServed << " seconds\n\n";
         totalServed += instance.partiesServed;
         totalServiceTime += instance.totalTimeServed;
     }
 
-    const chrono::duration<double> wallTime = finishTime_ - startTime_;
     cout << "Total Parties Served       : " << totalServed << '\n'
          << "Total Instance Service Time: " << totalServiceTime << " seconds\n"
-         << "Total Simulation Time      : approximately " << fixed
-         << setprecision(3) << wallTime.count() << " seconds\n\n"
+         << '\n'
          << "All dungeon parties have been served.\n"
          << "Simulation completed successfully.\n";
 }
@@ -125,6 +132,7 @@ void Simulation::runParty(int instanceIndex, int partyId, int duration) {
         DungeonInstance& instance = instances_[instanceIndex];
         instance.partiesServed += 1;
         instance.totalTimeServed += duration;
+        instance.servedPartyIds.push_back(partyId);
         instance.active = false;
         instance.currentPartyId = 0;
 

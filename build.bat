@@ -11,7 +11,7 @@ if not exist "%VCVARS%" (
     exit /b 1
 )
 
-call "%VCVARS%"
+call "%VCVARS%" >nul
 if errorlevel 1 (
     echo Error: Could not initialize the Visual Studio compiler environment.
     exit /b 1
