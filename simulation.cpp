@@ -9,7 +9,8 @@
 using namespace std;
 
 Simulation::Simulation(const Config& config, int totalParties)
-    : config_(config), startTime_(chrono::steady_clock::now()) {
+    : config_(config), availableInstances_(config.n),
+      startTime_(chrono::steady_clock::now()) {
     for (int partyId = 1; partyId <= totalParties; ++partyId) {
         waitingParties_.push(partyId);
     }
@@ -27,13 +28,49 @@ void Simulation::run() {
         printStatusLocked();
     }
 
-    const int workerCount = min(config_.n, static_cast<int>(waitingParties_.size()));
     vector<thread> workers;
-    workers.reserve(workerCount);
+    workers.reserve(waitingParties_.size());
 
-    for (int index = 0; index < workerCount; ++index) {
-        workers.emplace_back(&Simulation::runInstance, this, index);
+    random_device randomDevice;
+    seed_seq seed{randomDevice(), randomDevice(),
+                  static_cast<unsigned int>(
+                      chrono::steady_clock::now().time_since_epoch().count())};
+    mt19937 generator(seed);
+    uniform_int_distribution<int> durationDistribution(config_.t1, config_.t2);
+
+    while (!waitingParties_.empty()) {
+        // Each permit represents one empty dungeon instance. This blocks the
+        // dispatcher without busy-waiting when all instances are occupied.
+        availableInstances_.acquire();
+
+        int partyId = 0;
+        int instanceIndex = 0;
+        const int duration = durationDistribution(generator);
+
+        {
+            lock_guard<mutex> lock(mutex_);
+            partyId = waitingParties_.front();
+            waitingParties_.pop();
+
+            const auto available = find_if(
+                instances_.begin(), instances_.end(),
+                [](const DungeonInstance& instance) { return !instance.active; });
+            instanceIndex = static_cast<int>(available - instances_.begin());
+
+            DungeonInstance& instance = instances_[instanceIndex];
+            instance.active = true;
+            instance.currentPartyId = partyId;
+
+            cout << '[' << elapsedSeconds() << "s] Party " << partyId
+                 << " entered Instance " << instance.id << ".\n"
+                 << "     Dungeon duration: " << duration << " seconds\n\n";
+            printStatusLocked();
+        }
+
+        workers.emplace_back(
+            &Simulation::runParty, this, instanceIndex, partyId, duration);
     }
+
     for (thread& worker : workers) {
         worker.join();
     }
@@ -83,54 +120,22 @@ void Simulation::printStatusLocked() const {
     cout << "Waiting parties: " << waitingParties_.size() << "\n\n";
 }
 
-void Simulation::runInstance(int instanceIndex) {
-    random_device randomDevice;
-    seed_seq seed{randomDevice(), randomDevice(),
-                  static_cast<unsigned int>(instanceIndex + 1),
-                  static_cast<unsigned int>(
-                      chrono::steady_clock::now().time_since_epoch().count())};
-    mt19937 generator(seed);
-    uniform_int_distribution<int> durationDistribution(config_.t1, config_.t2);
+void Simulation::runParty(int instanceIndex, int partyId, int duration) {
+    this_thread::sleep_for(chrono::seconds(duration));
 
-    while (true) {
-        int partyId = 0;
-        int duration = 0;
+    {
+        lock_guard<mutex> lock(mutex_);
+        DungeonInstance& instance = instances_[instanceIndex];
+        instance.partiesServed += 1;
+        instance.totalTimeServed += duration;
+        instance.active = false;
+        instance.currentPartyId = 0;
 
-        {
-            lock_guard<mutex> lock(mutex_);
-            if (waitingParties_.empty()) {
-                return;
-            }
-
-            partyId = waitingParties_.front();
-            waitingParties_.pop();
-            duration = durationDistribution(generator);
-
-            DungeonInstance& instance = instances_[instanceIndex];
-            instance.active = true;
-            instance.currentPartyId = partyId;
-
-            cout << '[' << elapsedSeconds() << "s] Party " << partyId
-                 << " entered Instance " << instance.id << ".\n"
-                 << "     Dungeon duration: " << duration << " seconds\n\n";
-            printStatusLocked();
-        }
-
-        // Other workers can access shared state while this dungeon is running.
-        this_thread::sleep_for(chrono::seconds(duration));
-
-        {
-            lock_guard<mutex> lock(mutex_);
-            DungeonInstance& instance = instances_[instanceIndex];
-            instance.partiesServed += 1;
-            instance.totalTimeServed += duration;
-            instance.active = false;
-            instance.currentPartyId = 0;
-
-            cout << '[' << elapsedSeconds() << "s] Party " << partyId
-                 << " completed Instance " << instance.id << ".\n"
-                 << "     Instance " << instance.id << " is now available.\n\n";
-            printStatusLocked();
-        }
+        cout << '[' << elapsedSeconds() << "s] Party " << partyId
+             << " completed Instance " << instance.id << ".\n"
+             << "     Instance " << instance.id << " is now available.\n\n";
+        printStatusLocked();
     }
+
+    availableInstances_.release();
 }

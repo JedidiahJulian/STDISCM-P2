@@ -6,6 +6,7 @@
 #include <chrono>
 #include <mutex>
 #include <queue>
+#include <semaphore>
 #include <vector>
 
 using namespace std;
@@ -30,12 +31,13 @@ private:
     queue<int> waitingParties_;
     vector<DungeonInstance> instances_;
     mutable mutex mutex_;
+    counting_semaphore<> availableInstances_;
     chrono::steady_clock::time_point startTime_;
     chrono::steady_clock::time_point finishTime_;
 
     long long elapsedSeconds() const;
     void printStatusLocked() const;
-    void runInstance(int instanceIndex);
+    void runParty(int instanceIndex, int partyId, int duration);
 };
 
 #endif

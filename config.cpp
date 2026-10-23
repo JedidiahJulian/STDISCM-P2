@@ -117,10 +117,11 @@ Config loadConfig(const char* fileName) {
     Config config{values["n"], values["t"], values["h"],
                   values["d"], values["t1"], values["t2"]};
 
-    if (config.n <= 0 || config.t <= 0 || config.h <= 0 || config.d <= 0 ||
+    if (config.n <= 0 || config.t < 0 || config.h < 0 || config.d < 0 ||
         config.t1 <= 0 || config.t2 <= 0) {
         throw runtime_error(
-            "Invalid configuration: n, t, h, d, t1, and t2 must all be greater than 0.");
+            "Invalid configuration: n, t1, and t2 must be greater than 0; "
+            "t, h, and d must be 0 or greater.");
     }
     if (config.t1 > config.t2 || config.t2 > 15) {
         throw runtime_error("Invalid configuration: times must satisfy 1 <= t1 <= t2 <= 15.");

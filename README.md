@@ -1,6 +1,6 @@
 # MMORPG LFG Dungeon Queue Simulator
 
-This C++17 console program demonstrates process synchronization through an MMORPG-style dungeon queue. It forms valid five-player parties, places them in a FIFO queue, and lets a fixed number of concurrent dungeon-instance threads serve them safely.
+This C++20 console program demonstrates process synchronization through an MMORPG-style dungeon queue. It forms valid five-player parties, places them in a FIFO queue, and uses a counting semaphore to limit concurrent dungeon runs.
 
 ## Project structure
 
@@ -25,9 +25,9 @@ The six required keys are:
 | Key | Meaning | Valid values |
 | --- | --- | --- |
 | `n` | Maximum concurrent dungeon instances | Greater than 0 |
-| `t` | Tank players | Greater than 0 |
-| `h` | Healer players | Greater than 0 |
-| `d` | DPS players | Greater than 0 |
+| `t` | Tank players | 0 or greater |
+| `h` | Healer players | 0 or greater |
+| `d` | DPS players | 0 or greater |
 | `t1` | Minimum dungeon duration in seconds | Greater than 0 |
 | `t2` | Maximum dungeon duration in seconds | `1 <= t1 <= t2 <= 15` |
 
@@ -44,7 +44,7 @@ t2=8
 
 Missing keys, duplicate or unknown keys, malformed integers, and out-of-range values produce a descriptive error and a nonzero exit code. No worker threads are started after a configuration error.
 
-Every value must be a positive whole number. Zero, negative numbers, text (`n=two`), decimals (`t1=2.5`), and mixed values (`d=15players`) are rejected.
+Player counts (`t`, `h`, and `d`) may be zero; all other values must be positive whole numbers. Negative numbers, text (`n=two`), decimals (`t1=2.5`), and mixed values (`d=15players`) are rejected.
 
 ## Party formation
 
@@ -58,19 +58,18 @@ Parties receive sequential IDs and are inserted into a FIFO queue. Each party co
 
 ## Concurrency and synchronization
 
-The program creates `min(n, number of parties)` worker threads—one for each dungeon instance that can initially be used. All `n` instances still appear in status output and the final summary, so excess instances remain visible and empty.
+The dispatcher removes parties from the FIFO queue in order. Before assigning a party, it acquires a permit from a `std::counting_semaphore` initialized to `n`. If all instances are active, it blocks without busy-waiting until a completed party releases a permit. All `n` instances remain visible in status output and the final summary.
 
-Each worker repeatedly removes the next party from the shared queue, marks its own instance active, sleeps for that party's random dungeon duration, records completion, marks the instance empty, and continues until the queue is empty. The main thread joins every worker before printing the final summary.
+Each dispatched party runs in a worker thread. The worker sleeps for the party's random dungeon duration, records completion, marks its assigned instance empty, and releases one semaphore permit. The main thread joins every worker before printing the final summary.
 
-A single shared mutex protects all mutable shared state:
+The synchronization primitives have separate responsibilities:
 
-- The FIFO party queue
-- Instance status and statistics
-- Coordinated console events and full status snapshots
+- The counting semaphore limits active dungeon runs to `n`.
+- A mutex protects the FIFO queue, instance status and statistics, and coordinated console output.
 
 Queue removal and assignment happen in the same critical section, so a party cannot be assigned twice and an instance cannot hold two parties. Completion counters and status transitions are also protected. Each complete console snapshot is printed while holding the mutex, preventing interleaved output.
 
-The mutex is always acquired through `std::lock_guard` and there is only one mutex, eliminating circular lock ordering. Crucially, a worker releases the mutex before `sleep_for`, so a running dungeon never blocks another instance from obtaining work. The code contains no busy-waiting. FIFO removal gives every party a fixed place in the finite queue, so every formed party is eventually served and starvation is avoided.
+The mutex is acquired through `std::lock_guard` and released before a worker calls `sleep_for`. Semaphore waiting blocks the dispatcher efficiently, so the code contains no busy-waiting. FIFO removal gives every party a fixed place in the finite queue, so every formed party is eventually served and starvation is avoided.
 
 ## Build and run
 
@@ -79,7 +78,7 @@ Run commands from the directory containing `main.cpp` and `config.txt`.
 Compile with g++:
 
 ```bash
-g++ -std=c++17 -pthread main.cpp config.cpp simulation.cpp -o dungeon_lfg
+g++ -std=c++20 -pthread main.cpp config.cpp simulation.cpp -o dungeon_lfg
 ```
 
 On Linux or macOS:
