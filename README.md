@@ -16,7 +16,7 @@ This C++20 console program demonstrates process synchronization through an MMORP
 
 The simulator allows at most `n` active dungeon parties. Every complete party contains exactly one tank, one healer, and three DPS players. Dungeon runs take a random integral number of seconds from `t1` through `t2`, inclusive. The program reports live instance states, waiting parties, unmatched players, and per-instance and aggregate statistics.
 
-All players are treated as arriving at the same time. Inputs come only from `config.txt`; the program never prompts for interactive input.
+All players are treated as arriving at the same time. Configuration values come only from `config.txt`. The program pauses for Enter after displaying the configuration and again after the final summary.
 
 ## Configuration
 

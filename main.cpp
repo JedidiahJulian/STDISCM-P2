@@ -4,8 +4,15 @@
 #include <algorithm>
 #include <exception>
 #include <iostream>
+#include <string>
 
 using namespace std;
+
+static void waitForEnter(const string& message) {
+    cout << '\n' << message;
+    string input;
+    getline(cin, input);
+}
 
 int main() {
     try {
@@ -13,10 +20,12 @@ int main() {
         const int totalParties = min({config.t, config.h, config.d / 3});
 
         printInitialInformation(config, totalParties);
+        waitForEnter("Press Enter to start the simulation...");
 
         Simulation simulation(config, totalParties);
         simulation.run();
         simulation.printFinalSummary();
+        waitForEnter("Press Enter to exit...");
 
         return 0;
     } catch (const exception& error) {

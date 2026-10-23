@@ -5,16 +5,16 @@
 n=3
 
 # Number of tank players waiting in the queue (must be >= 0).
-t=2
+t=5
 
 # Number of healer players waiting in the queue (must be >= 0).
-h=2
+h=5
 
 # Number of DPS players waiting in the queue (must be >= 0).
-d=7
+d=15
 
 # Minimum dungeon completion time in seconds (must be > 0).
-t1=4
+t1=1
 
 # Maximum dungeon completion time in seconds (must satisfy 1 <= t1 <= t2 <= 15).
-t2=10
+t2=5
