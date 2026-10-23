@@ -1,9 +1,10 @@
 #include "simulation.h"
 
 #include <algorithm>
+#include <cstdlib>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
-#include <random>
 #include <thread>
 
 using namespace std;
@@ -31,12 +32,7 @@ void Simulation::run() {
     vector<thread> workers;
     workers.reserve(waitingParties_.size());
 
-    random_device randomDevice;
-    seed_seq seed{randomDevice(), randomDevice(),
-                  static_cast<unsigned int>(
-                      chrono::steady_clock::now().time_since_epoch().count())};
-    mt19937 generator(seed);
-    uniform_int_distribution<int> durationDistribution(config_.t1, config_.t2);
+    srand(static_cast<unsigned int>(time(nullptr)));
 
     while (!waitingParties_.empty()) {
         // Each permit represents one empty dungeon instance. This blocks the
@@ -45,7 +41,8 @@ void Simulation::run() {
 
         int partyId = 0;
         int instanceIndex = 0;
-        const int duration = durationDistribution(generator);
+        const int duration =
+            config_.t1 + rand() % (config_.t2 - config_.t1 + 1);
 
         {
             lock_guard<mutex> lock(mutex_);
